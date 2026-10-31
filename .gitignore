@@ -1,0 +1,18 @@
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock
+
+# Local chain data and generated specs
+/db
+/chains
+*.json.tmp
+*.wasm
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.keystore
+*.seed
+*.mnemonic
