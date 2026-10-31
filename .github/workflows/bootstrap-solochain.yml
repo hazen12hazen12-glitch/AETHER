@@ -32,7 +32,7 @@ jobs:
           find node runtime pallets env-setup -type f \( -name '*.rs' -o -name '*.toml' -o -name '*.md' \) -print0 | xargs -0 sed -i 's/solochain-template/aether/g'
           sed -i 's/solochain-template/aether/g' README.md
           mkdir -p docs/implementation
-          cat > docs/implementation/BOOTSTRAP.md &&lt;&lt;'EOF'
+          cat > docs/implementation/BOOTSTRAP.md &lt;&lt;'EOF'
           # AETHER implementation bootstrap
           
           This scaffold is copied from the official Polkadot SDK Solochain template.
