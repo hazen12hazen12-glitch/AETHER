@@ -1,0 +1,65 @@
+name: Bootstrap AETHER Solochain
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/bootstrap-solochain.yml"
+    branches:
+      - "engineering/solochain-bootstrap"
+permissions:
+  contents: write
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout AETHER
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Checkout pinned Polkadot SDK Solochain template
+        uses: actions/checkout@v4
+        with:
+          repository: paritytech/polkadot-sdk
+          ref: ed30dfeb9818b48373a7aa69f6c6195677f9bad3
+          path: upstream-sdk
+          sparse-checkout: templates/solochain
+          sparse-checkout-cone-mode: true
+      - name: Copy official Solochain template without deleting AETHER docs
+        shell: bash
+        run: |
+          cp -R upstream-sdk/templates/solochain/. .
+          rm -rf upstream-sdk
+          find node runtime pallets env-setup -type f \( -name '*.rs' -o -name '*.toml' -o -name '*.md' \) -print0 | xargs -0 sed -i 's/solochain-template/aether/g'
+          sed -i 's/solochain-template/aether/g' README.md
+          mkdir -p docs/implementation
+          cat > docs/implementation/BOOTSTRAP.md &&lt;&lt;'EOF'
+          # AETHER implementation bootstrap
+          
+          This scaffold is copied from the official Polkadot SDK Solochain template.
+          
+          - Upstream repository: https://github.com/paritytech/polkadot-sdk
+          - Pinned source ref: stable2603 tree commit ed30dfeb9818b48373a7aa69f6c6195677f9bad3
+          - Template path: templates/solochain
+          - Chain model: sovereign Solochain (not a parachain)
+          - Native token: AETH (21,000,000 maximum supply remains a protocol requirement; genesis allocation and decimals are not finalized here)
+          
+          ## Important implementation status
+          
+          The upstream template's default runtime uses Aura + GRANDPA. This is only a bootstrapping baseline, NOT the approved AETHER consensus. The next implementation phase must replace Aura with BABE and add the NPoS staking/session/election stack while retaining GRANDPA finality. Do not launch a public network with the template defaults.
+          
+          Frontier EVM compatibility is not yet integrated. Its SDK dependency branch must be kept aligned with stable2603 and the integration must be compile-tested before being considered complete.
+          
+          AI Useful-Work remains an application/reward layer. It must never select block authors, alter BABE/GRANDPA validity, or influence finality.
+          EOF
+      - name: Commit generated scaffold
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No scaffold changes to commit"
+          else
+            git commit -m "Bootstrap AETHER from pinned Polkadot SDK Solochain template"
+            git push origin HEAD
+          fi
