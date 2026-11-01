@@ -5,12 +5,15 @@ on:
   push:
     branches: [engineering/solochain-bootstrap]
     paths:
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'node/**'
-      - 'runtime/**'
-      - 'pallets/**'
-      - '.github/workflows/bootstrap-solochain.yml'
+      - Cargo.toml
+      - Cargo.lock
+      - node/**
+      - runtime/**
+      - pallets/**
+      - .github/workflows/bootstrap-solochain.yml
+
+permissions:
+  contents: read
 
 jobs:
   validate:
@@ -20,12 +23,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check root Cargo.toml exists
-        run: |
-          test -f Cargo.toml || { echo "::error::root Cargo.toml is missing"; exit 1; }
+        run: test -f Cargo.toml || { echo "::error::root Cargo.toml is missing"; exit 1; }
 
       - name: Check Cargo.lock exists
-        run: |
-          test -f Cargo.lock || { echo "::error::Cargo.lock is missing"; exit 1; }
+        run: test -f Cargo.lock || { echo "::error::Cargo.lock is missing"; exit 1; }
 
       - name: Validate workspace members
         run: |
@@ -34,12 +35,10 @@ jobs:
           echo "workspace_members: $MEMBERS"
 
       - name: cargo check --workspace --locked
-        run: |
-          cargo check --workspace --locked
+        run: cargo check --workspace --locked
 
       - name: cargo test --workspace --locked
-        run: |
-          cargo test --workspace --locked
+        run: cargo test --workspace --locked
 
       - name: Report passed
         if: success()
