@@ -10,7 +10,7 @@
 - [ ] Establish node/runtime workspace, license notices, toolchain, and CI.
 
 ## Phase 2 — Native asset and PoS
-- [ ] Configure AETH genesis.
+- [ ] Configure SYNAPSE AI (SAI) genesis.
 - [ ] Enforce and test issuance cap.
 - [ ] Configure validator/staking/session lifecycle.
 - [ ] Configure fees, weights, block limits, and telemetry.
