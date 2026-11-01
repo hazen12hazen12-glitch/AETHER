@@ -3,55 +3,44 @@ name: Bootstrap AETHER Solochain
 on:
   workflow_dispatch:
   push:
+    branches: [engineering/solochain-bootstrap]
     paths:
-      - ".github/workflows/bootstrap-solochain.yml"
-    branches:
-      - "engineering/solochain-bootstrap"
-
-permissions:
-  contents: write
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'node/**'
+      - 'runtime/**'
+      - 'pallets/**'
+      - '.github/workflows/bootstrap-solochain.yml'
 
 jobs:
-  bootstrap:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout AETHER
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Verify AETHER is an independent Solochain
-        id: verify
-        shell: bash
+      - name: Check root Cargo.toml exists
         run: |
-          # AETHER is a sovereign Solochain, not a parachain or monorepo.
-          # The bootstrap workflow must NOT copy SDK template scaffolding
-          # that assumes a workspace with node/runtime/pallets/clients.
-          if [ ! -f Cargo.toml ]; then
-            echo "::error::AETHER Cargo.toml not found - cannot verify independence"
-            exit 1
-          fi
+          test -f Cargo.toml || { echo "::error::root Cargo.toml is missing"; exit 1; }
 
-          if ! grep -q '^\[workspace\]' Cargo.toml; then
-            echo "::warning::Cargo.toml has no [workspace] section"
-          fi
-
-          echo "AETHER verified as independent Solochain (not SDK monorepo copy)"
-
-      - name: Create BOOTSTRAP.md implementation status
-        id: bootstrap-doc
-        shell: bash
+      - name: Check Cargo.lock exists
         run: |
-          mkdir -p docs/implementation
-          printf '# AETHER implementation bootstrap\n\nThis scaffold is copied from the official Polkadot SDK Solochain template.\n\n- Upstream repository: https://github.com/paritytech/polkadot-sdk\n- Pinned source ref: stable2603 tree commit ed30dfeb9818b48373a7aa69f6c6195677f9bad3\n- Template path: templates/solochain\n- Chain model: sovereign Solochain (not a parachain)\n- Native token: AETH (21,000,000 maximum supply remains a protocol requirement; genesis allocation and decimals are not finalized here)\n\n## Important implementation status\n\nThe upstream template default runtime uses Aura + GRANDPA. This is only a bootstrapping baseline, NOT the approved AETHER consensus.\n\nFrontier EVM compatibility is not yet integrated.\n\nAI Useful-Work remains an application/reward layer. It must never select block authors, alter BABE/GRANDPA validity, or influence finality.\n' > docs/implementation/BOOTSTRAP.md
+          test -f Cargo.lock || { echo "::error::Cargo.lock is missing"; exit 1; }
 
-          if [ ! -f docs/implementation/BOOTSTRAP.md ]; then
-            echo "::error::BOOTSTRAP.md was not created"
-            exit 1
-          fi
-          echo "BOOTSTRAP.md created successfully"
-
-      - name: Report bootstrap status
-        shell: bash
+      - name: Validate workspace members
         run: |
-          echo "AETHER Solochain bootstrap completed successfully"
+          MEMBERS=$(cargo metadata --locked --format-version 1 --no-deps 2>&1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(' '.join(d.get('workspace_members',[])))")
+          test -n "$MEMBERS" || { echo "::error::no workspace members found"; exit 1; }
+          echo "workspace_members: $MEMBERS"
+
+      - name: cargo check --workspace --locked
+        run: |
+          cargo check --workspace --locked
+
+      - name: cargo test --workspace --locked
+        run: |
+          cargo test --workspace --locked
+
+      - name: Report passed
+        if: success()
+        run: echo "All Rust workspace validation steps passed"
