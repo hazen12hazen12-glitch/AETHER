@@ -20,15 +20,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout pinned Polkadot SDK Solochain template
-        uses: actions/checkout@v4
-        with:
-          repository: paritytech/polkadot-sdk
-          ref: ed30dfeb9818b48373a7aa69f6c6195677f9bad3
-          path: upstream-sdk
-          sparse-checkout: templates/solochain
-          sparse-checkout-cone-mode: true
-
       - name: Verify AETHER is an independent Solochain
         id: verify
         shell: bash
