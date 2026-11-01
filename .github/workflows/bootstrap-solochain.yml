@@ -88,9 +88,6 @@ EOF
             exit 1
           fi
           echo "BOOTSTRAP.md created successfully"
-EOF
-
-          echo "Bootstrap documentation step complete"
 
       - name: Report bootstrap status
         shell: bash
@@ -99,4 +96,3 @@ EOF
           echo "- No SDK template was copied to AETHER"
           echo "- BOOTSTRAP.md exists in docs/implementation/"
           echo "- AETHER remains an independent sovereign Solochain"
-EOF
