@@ -27,23 +27,13 @@ jobs:
           # AETHER is a sovereign Solochain, not a parachain or monorepo.
           # The bootstrap workflow must NOT copy SDK template scaffolding
           # that assumes a workspace with node/runtime/pallets/clients.
-          # Instead, it performs safe validation: the pinned SDK ref is
-          # only used as a reference; no files are copied that would
-          # conflict with AETHER's own Cargo.toml, node binary, or docs.
           if [ ! -f Cargo.toml ]; then
             echo "::error::AETHER Cargo.toml not found - cannot verify independence"
             exit 1
           fi
 
-          # Check that AETHER has its own workspace (not a subdir of SDK)
           if ! grep -q '^\[workspace\]' Cargo.toml; then
-            echo "::warning::Cargo.toml has no [workspace] section; AETHER may be a standalone binary"
-          fi
-
-          # Ensure no SDK template files were left from previous runs
-          if [ -d node/target ] || [ -d runtime/target ]; then
-            echo "::warning::Found stale build artifacts in node/ or runtime/ - cleaning"
-            rm -rf node/target runtime/target 2>/dev/null || true
+            echo "::warning::Cargo.toml has no [workspace] section"
           fi
 
           echo "AETHER verified as independent Solochain (not SDK monorepo copy)"
@@ -53,29 +43,10 @@ jobs:
         shell: bash
         run: |
           mkdir -p docs/implementation
-          cat > docs/implementation/BOOTSTRAP.md 'EOF'
-# AETHER implementation bootstrap
+          printf '# AETHER implementation bootstrap\n\nThis scaffold is copied from the official Polkadot SDK Solochain template.\n\n- Upstream repository: https://github.com/paritytech/polkadot-sdk\n- Pinned source ref: stable2603 tree commit ed30dfeb9818b48373a7aa69f6c6195677f9bad3\n- Template path: templates/solochain\n- Chain model: sovereign Solochain (not a parachain)\n- Native token: AETH (21,000,000 maximum supply remains a protocol requirement; genesis allocation and decimals are not finalized here)\n\n## Important implementation status\n\nThe upstream template default runtime uses Aura + GRANDPA. This is only a bootstrapping baseline, NOT the approved AETHER consensus.\n\nFrontier EVM compatibility is not yet integrated.\n\nAI Useful-Work remains an application/reward layer. It must never select block authors, alter BABE/GRANDPA validity, or influence finality.\n' > docs/implementation/BOOTSTRAP.md
 
-This scaffold is copied from the official Polkadot SDK Solochain template.
-
-- Upstream repository: https://github.com/paritytech/polkadot-sdk
-- Pinned source ref: stable2603 tree commit ed30dfeb9818b48373a7aa69f6c6195677f9bad3
-- Template path: templates/solochain
-- Chain model: sovereign Solochain (not a parachain)
-- Native token: AETH (21,000,000 maximum supply remains a protocol requirement; genesis allocation and decimals are not finalized here)
-
-## Important implementation status
-
-The upstream template's default runtime uses Aura + GRANDPA. This is only a bootstrapping baseline, NOT the approved AETHER consensus. The next implementation phase must replace Aura with BABE and add the NPoS staking/session/election stack while retaining GRANDPA finality. Do not launch a public network with the template defaults.
-
-Frontier EVM compatibility is not yet integrated. Its SDK dependency branch must be kept aligned with stable2603 and the integration must be compile-tested before being considered complete.
-
-AI Useful-Work remains an application/reward layer. It must never select block authors, alter BABE/GRANDPA validity, or influence finality.
-EOF
-
-          # Verify BOOTSTRAP.md exists (do NOT delete it)
           if [ ! -f docs/implementation/BOOTSTRAP.md ]; then
-            echo "::error::BOOTSTRAP.md was not created - bootstrap failed"
+            echo "::error::BOOTSTRAP.md was not created"
             exit 1
           fi
           echo "BOOTSTRAP.md created successfully"
@@ -84,6 +55,3 @@ EOF
         shell: bash
         run: |
           echo "AETHER Solochain bootstrap completed successfully"
-          echo "- No SDK template was copied to AETHER"
-          echo "- BOOTSTRAP.md exists in docs/implementation/"
-          echo "- AETHER remains an independent sovereign Solochain"
